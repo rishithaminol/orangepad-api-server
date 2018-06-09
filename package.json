@@ -1,0 +1,15 @@
+{
+  "name": "orangepad-api-server",
+  "version": "1.0.0",
+  "description": "Orangepad user handling API system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Rishitha Minol",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "nodemon": "^1.17.5"
+  }
+}
