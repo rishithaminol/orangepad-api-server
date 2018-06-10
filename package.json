@@ -12,6 +12,7 @@
     "csv-load-sync": "^1.0.0",
     "express": "^4.16.3",
     "maxmind": "^2.7.0",
+    "mysql": "^2.15.0",
     "nodemon": "^1.17.5"
   }
 }

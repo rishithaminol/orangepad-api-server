@@ -14,7 +14,7 @@ app.disable('etag');
 
 // determine all undefined calls as errors (catch 404s)
 app.use(function(req, res, next){
-  var err = new Error("Orangepad Systems pvt Ltd. Undefined error");
+  var err = new Error("undefined_url");
 
   err.status = 404;
   next(err);
@@ -27,7 +27,7 @@ app.use(function (err, req, res, next) {
   console.log(db_query);
 
   res.status(err.status);
-  res.json(err.message);
+  res.json({error: err.message});
 })
 
 var port = process.env.PORT || 6565;
