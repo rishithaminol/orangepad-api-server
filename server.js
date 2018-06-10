@@ -4,10 +4,13 @@ const routes = require('./router')
 
 app.use(function(req, res, next){
   res.header('Content-Type', 'application/json');
+  res.header('Server', 'Apache');
+  res.header('X-Powered-By', 'PHP/5.1.2-1+b1'); // Hacker distraction
   next();
 });
 
 app.use('/', routes);
+app.disable('etag');
 
 // determine all undefined calls as errors (catch 404s)
 app.use(function(req, res, next){
