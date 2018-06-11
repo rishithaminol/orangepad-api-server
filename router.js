@@ -52,7 +52,7 @@ router.get('/balance/:userId', function(req, res, next){
 });
 
 // Check for registerd user
-router.get('/isregisterd/:userId', function(req, res, next){
+router.get('/isregistered/:userId', function(req, res, next){
   // user id should be validated for sql injections
   var format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
   if (format.test(req.params.userId)) { // Untrusted username
