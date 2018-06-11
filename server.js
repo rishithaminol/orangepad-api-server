@@ -1,12 +1,8 @@
-var express = require('express');
-var app = express();
+const express = require('express');
+const app = express();
 const routes = require('./router');
-const fs = require('fs');
-
 const https = require('https');
-
-// Server error log file
-error_log = fs.createWriteStream('./server_error.log', { flags: 'a' });
+const server_log = require('./server_log.js');
 
 // Default response headers
 app.use(function(req, res, next){
@@ -38,8 +34,7 @@ app.use(function (err, req, res, next) {
     req_url: req.originalUrl,
     http_headers: client_http_headers
   };
-  error_log.write(JSON.stringify(err_obj) + '\n');
-  console.log(JSON.stringify(err_obj));
+  server_log.error(JSON.stringify(err_obj));
 
   res.status(err.status);
   res.json({error: err.message});
