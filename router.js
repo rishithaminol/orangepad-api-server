@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const maxmind = require('maxmind');
 const csvParser = require('csv-load-sync');
-var mysql = require('mysql');
+const db = require('./db.js');
 
 const csv_file = 'country_iso_prefix.csv'
 var csv_table = csvParser(csv_file);
@@ -11,16 +11,6 @@ var CountryLookup = maxmind.openSync('./GeoLite2-Country.mmdb', {
   watchForUpdates: true,
   watchForUpdateNonPersistent: true,
   watchForUpdatesHook: () => {console.log('GeoipLocation database Updated!');}
-});
-
-var con = mysql.createConnection({
-  host: "node01.rminol.xyz",
-  user: "voipswitch",
-  password: "choo&xae2Equ6uaj"
-});
-con.connect(function(err) {
-  if (err) throw err;
-  console.log("Mysql Database Connected!");
 });
 
 // Get balance
@@ -32,7 +22,7 @@ router.get('/balance/:userId', function(req, res, next){
     http_err.status = 403; // Forbidden (4xx Client error)
     next(http_err);
   } else {
-    con.query("SELECT account_state FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, result, fields) {
+    db.query("SELECT account_state FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, result, fields) {
       if (result.length == 0 || err) {
         var http_err;
         if (err) {
@@ -60,7 +50,7 @@ router.get('/isregistered/:userId', function(req, res, next){
     http_err.status = 403; // Forbidden (4xx Client error)
     next(http_err);
   } else {
-    con.query("SELECT login FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, result, fields) {
+    db.query("SELECT login FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, result, fields) {
       if (err) {
         var http_err = new Error("server_error");
         http_err.status = 500; // Internal Server Error
