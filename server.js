@@ -1,10 +1,14 @@
 var express = require('express');
 var app = express();
 const routes = require('./router');
-
-const https = require('https');
 const fs = require('fs');
 
+const https = require('https');
+
+// Server error log file
+error_log = fs.createWriteStream('./server_error.log', { flags: 'a' });
+
+// Default response headers
 app.use(function(req, res, next){
   res.header('Content-Type', 'application/json');
   res.header('Server', 'Apache');
@@ -25,10 +29,17 @@ app.use(function(req, res, next){
 });
 app.use(function (err, req, res, next) {
   var client_ip_addr = req.connection.remoteAddress.split(':').pop();
-  var client_http_headers = JSON.stringify(req.headers);
+  var client_http_headers = req.headers;
 
-  var db_query = {ip_addr: client_ip_addr, http_headers: client_http_headers};
-  console.log(db_query);
+  var err_obj = {
+    time: new Date() / 1000,
+    error_type: err.message,
+    ip_addr: client_ip_addr,
+    req_url: req.originalUrl,
+    http_headers: client_http_headers
+  };
+  error_log.write(JSON.stringify(err_obj) + '\n');
+  console.log(JSON.stringify(err_obj));
 
   res.status(err.status);
   res.json({error: err.message});
@@ -44,4 +55,3 @@ https.createServer({
 }, app).listen(6566, function() {
   console.log('Https server listening ' + 6566);
 });
-
