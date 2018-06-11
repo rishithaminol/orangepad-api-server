@@ -1,6 +1,9 @@
 var express = require('express');
 var app = express();
-const routes = require('./router')
+const routes = require('./router');
+
+const https = require('https');
+const fs = require('fs');
 
 app.use(function(req, res, next){
   res.header('Content-Type', 'application/json');
@@ -9,6 +12,7 @@ app.use(function(req, res, next){
   next();
 });
 
+// app.use(express.static('static')); // Use this for ssl activation
 app.use('/', routes);
 app.disable('etag');
 
@@ -30,7 +34,14 @@ app.use(function (err, req, res, next) {
   res.json({error: err.message});
 })
 
-var port = process.env.PORT || 6565;
-var server = app.listen(port, function() {
-  console.log('Express server listening on port ' + port);
+var server = app.listen(6565, function() {
+  console.log('Express server listening on port ' + 6565);
 });
+
+https.createServer({
+	cert: fs.readFileSync('./fullchain.pem'),
+	key: fs.readFileSync('./privkey.pem')
+}, app).listen(6566, function() {
+  console.log('Https server listening ' + 6566);
+});
+
