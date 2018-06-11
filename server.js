@@ -3,6 +3,7 @@ const app = express();
 const routes = require('./router');
 const https = require('https');
 const server_log = require('./server_log.js');
+const fs = require('fs');
 
 // Default response headers
 app.use(function(req, res, next){
