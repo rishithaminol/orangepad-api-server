@@ -4,8 +4,7 @@ const maxmind = require('maxmind');
 const csvParser = require('csv-load-sync');
 const db = require('./db.js');
 
-const csv_file = 'country_iso_prefix.csv'
-var csv_table = csvParser(csv_file);
+var country_iso = csvParser('country_iso_prefix.csv');
 
 var CountryLookup = maxmind.openSync('./GeoLite2-Country.mmdb', {
   watchForUpdates: true,
@@ -76,9 +75,9 @@ router.get('/ipcountry', async function(req, res, next){
   var name = country['country']['names']['en'];
 
   var i;
-  for (i = 0; i < csv_table.length; i++) {
-    if (csv_table[i]['iso'] === iso_code) {
-      var phone_code = csv_table[i]['phonecode'];
+  for (i = 0; i < country_iso.length; i++) {
+    if (country_iso[i]['iso'] === iso_code) {
+      var phone_code = country_iso[i]['phonecode'];
       console.log({prefix: phone_code, iso_code: iso_code, name: name});
 
       res.status(200);
