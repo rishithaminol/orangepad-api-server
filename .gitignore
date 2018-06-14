@@ -3,3 +3,7 @@ package-lock\.json
 logs/
 GeoLite2-Country\.mmdb
 server_error\.log
+cert
+fullchain.pem
+privkey.pem
+
