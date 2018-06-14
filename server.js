@@ -38,7 +38,7 @@ app.use(function (err, req, res, next) {
   server_log.error(JSON.stringify(err_obj));
 
   res.status(err.status);
-  res.json({error: err.message});
+  res.json({response: err.status, error: err.message});
 })
 
 var server = app.listen(6565, function() {

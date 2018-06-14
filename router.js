@@ -34,7 +34,7 @@ router.get('/balance/:userId', function(req, res, next){
         next(http_err);
       } else {
         res.status(200);
-        res.json({balance: result[0]['account_state']});
+        res.json({response: 200, balance: result[0]['account_state']});
       }
     });
   }
@@ -56,11 +56,11 @@ router.get('/isregistered/:userId', function(req, res, next){
         next(http_err);
       } else {
         if (result.length == 0) {
-          res.status(200);
-          res.json({result: 1}); // not registered user
+          res.status(404);
+          res.json({response: 404, result: 1}); // not registered user
         } else {
           res.status(200);
-          res.json({result: 0}); // registered user
+          res.json({response: 200, result: 0}); // registered user
         }
       }
     });
@@ -81,7 +81,7 @@ router.get('/ipcountry', async function(req, res, next){
       console.log({prefix: phone_code, iso_code: iso_code, name: name});
 
       res.status(200);
-      res.json({prefix: phone_code, iso_code: iso_code, name: name});
+      res.json({response: 200, prefix: phone_code, iso_code: iso_code, name: name});
     }
   }
 });
