@@ -22,7 +22,7 @@ router.get('/balance/:userId', function(req, res, next){
     next(http_err);
   } else {
     db.query("SELECT account_state FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, result, fields) {
-      if (result.length == 0 || err) {
+      if (err || result.length == 0) {
         var http_err;
         if (err) {
           http_err = new Error("server_error");
