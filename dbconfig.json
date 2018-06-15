@@ -1,6 +1,6 @@
 {
   "host": "hostname",
   "user": "username",
-  "password": "password"
-  "connectionLimit": 50,
+  "password": "password",
+  "connectionLimit": 50
 }
