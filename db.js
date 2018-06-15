@@ -2,30 +2,16 @@ var mysql = require('mysql');
 const fs = require('fs');
 
 var dbconf = JSON.parse(fs.readFileSync('./dbconfig.json', 'UTF-8'));
-var connection;
+var conn_pool = mysql.createPool(dbconf);
 
-function handle_disconnect() {
-  connection = mysql.createConnection(dbconf);
+conn_pool.on('connection', function(connection) {
+    console.log('Mysql database connection initiated!');
+});
 
-  connection.connect(function(err){
-    if (err) {
-      console.log('Error when connecting to the database:', err);
-      setTimeout(handle_disconnect, 2000);
-    } else {
-      console.log('Database connected!');
-    }
-  });
+var query_from_pool = function (query, callback) {
+  conn_pool.query(query, callback);
+};
 
-  connection.on('error', function(err){
-    console.log('database error:', err);
-    if (err.code == 'PROTOCOL_CONNECTION_LOST') {
-      handle_disconnect();
-    } else {
-      throw err;
-    }
-  });
-}
-
-handle_disconnect();
-
-module.exports = connection;
+module.exports = {
+  query_from_pool: query_from_pool
+};

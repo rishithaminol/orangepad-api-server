@@ -2,4 +2,5 @@
   "host": "hostname",
   "user": "username",
   "password": "password"
+  "connectionLimit": 50,
 }

@@ -21,13 +21,13 @@ router.get('/balance/:userId', function(req, res, next){
     http_err.status = 403; // Forbidden (4xx Client error)
     next(http_err);
   } else {
-    db.query("SELECT account_state FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, result, fields) {
-      if (err || result.length == 0) {
+    db.query_from_pool("SELECT account_state FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, rows, fields) {
+      if (err || rows.length == 0) {
         var http_err;
         if (err) {
           http_err = new Error("server_error");
           http_err.status = 500; // Internal Server Error
-	  console.log(http_err.stack);
+      	  console.log(http_err.stack);
           console.log("database server error code:" + err.code);
         } else {
           http_err = new Error("unknown_user");
@@ -36,7 +36,7 @@ router.get('/balance/:userId', function(req, res, next){
         next(http_err);
       } else {
         res.status(200);
-        res.json({response: 200, balance: result[0]['account_state']});
+        res.json({response: 200, balance: rows[0]['account_state']});
       }
     });
   }
@@ -51,15 +51,15 @@ router.get('/isregistered/:userId', function(req, res, next){
     http_err.status = 403; // Forbidden (4xx Client error)
     next(http_err);
   } else {
-    db.query("SELECT login FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, result, fields) {
+    db.query_from_pool("SELECT login FROM voipswitch.clientsshared where login = '" + req.params.userId + "';", function (err, rows, fields) {
       if (err) {
         var http_err = new Error("server_error");
         http_err.status = 500; // Internal Server Error
         next(http_err);
-	console.log(http_err.stack);
+        console.log(http_err.stack);
         console.log("database server error code:" + err.code);
       } else {
-        if (result.length == 0) {
+        if (rows.length == 0) {
           res.status(404);
           res.json({response: 404, result: 1}); // not registered user
         } else {
