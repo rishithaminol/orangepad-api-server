@@ -27,6 +27,8 @@ router.get('/balance/:userId', function(req, res, next){
         if (err) {
           http_err = new Error("server_error");
           http_err.status = 500; // Internal Server Error
+	  console.log(http_err.stack);
+          console.log("database server error code:" + err.code);
         } else {
           http_err = new Error("unknown_user");
           http_err.status = 403; // Forbidden (4xx Client error)
@@ -54,6 +56,8 @@ router.get('/isregistered/:userId', function(req, res, next){
         var http_err = new Error("server_error");
         http_err.status = 500; // Internal Server Error
         next(http_err);
+	console.log(http_err.stack);
+        console.log("database server error code:" + err.code);
       } else {
         if (result.length == 0) {
           res.status(404);
