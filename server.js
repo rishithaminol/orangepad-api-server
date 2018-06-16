@@ -5,6 +5,8 @@ const https = require('https');
 const server_log = require('./server_log.js');
 const fs = require('fs');
 
+var allowed_http_methods = ['GET'];
+
 // Default response headers
 app.use(function(req, res, next){
   res.header('Content-Type', 'application/json');
@@ -18,24 +20,28 @@ app.use('/', routes);
 app.disable('etag');
 
 // determine all undefined calls as errors (catch 404s)
+// every error detection priour to every route should be written here
 app.use(function(req, res, next){
-  var err = new Error("undefined_url");
-
-  err.status = 404;
+  var err;
+  if (!allowed_http_methods.includes(req.method)) {
+    err = new Error("undefined_method");
+    err.status = 405;
+  } else {
+    err = new Error("undefined_url");
+    err.status = 404;
+  }
   next(err);
 });
 app.use(function (err, req, res, next) {
-  var client_ip_addr = req.connection.remoteAddress.split(':').pop();
-  var client_http_headers = req.headers;
-
   var err_obj = {
     time: new Date() / 1000,
     error_type: err.message,
-    ip_addr: client_ip_addr,
-    req_url: req.originalUrl,
-    http_headers: client_http_headers
+    ip_addr: req.connection.remoteAddress.split(':').pop(),
+    req_url: req.url,
+    http_method: req.method,
+    http_headers: req.headers
   };
-  server_log.error(JSON.stringify(err_obj));
+  server_log.error(JSON.stringify(err_obj, null, 4));
 
   res.status(err.status);
   res.json({response: err.status, error: err.message});
