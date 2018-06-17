@@ -3,6 +3,7 @@ const router = express.Router();
 const maxmind = require('maxmind');
 const csvParser = require('csv-load-sync');
 const db = require('./db.js');
+const server_log = require('./server_log.js');
 
 var country_iso = csvParser('country_iso_prefix.csv');
 
@@ -35,8 +36,10 @@ router.get('/balance/:userId', function(req, res, next){
         }
         next(http_err);
       } else {
+        var obj = {response: 200, balance: rows[0]['account_state']};
         res.status(200);
-        res.json({response: 200, balance: rows[0]['account_state']});
+        res.json(obj);
+        server_log.info(obj);
       }
     });
   }
@@ -60,11 +63,15 @@ router.get('/isregistered/:userId', function(req, res, next){
         console.log("database server error code:" + err.code);
       } else {
         if (rows.length == 0) {
+          var obj = {response: 404, result: 1};
           res.status(404);
-          res.json({response: 404, result: 1}); // not registered user
+          res.json(obj); // not registered user
+          server_log.info(obj);
         } else {
+          var obj = {response: 200, result: 0};
           res.status(200);
-          res.json({response: 200, result: 0}); // registered user
+          res.json(obj); // registered user
+          server_log.info(obj);
         }
       }
     });
@@ -82,10 +89,10 @@ router.get('/ipcountry', async function(req, res, next){
   for (i = 0; i < country_iso.length; i++) {
     if (country_iso[i]['iso'] === iso_code) {
       var phone_code = country_iso[i]['phonecode'];
-      console.log({prefix: phone_code, iso_code: iso_code, name: name});
-
+      var obj = {response: 200, prefix: phone_code, iso_code: iso_code, name: name};
       res.status(200);
-      res.json({response: 200, prefix: phone_code, iso_code: iso_code, name: name});
+      res.json(obj);
+      server_log.info(obj);
     }
   }
 });

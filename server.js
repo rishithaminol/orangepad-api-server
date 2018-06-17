@@ -41,7 +41,7 @@ app.use(function (err, req, res, next) {
     http_method: req.method,
     http_headers: req.headers
   };
-  server_log.error(JSON.stringify(err_obj, null, 4));
+  server_log.error(err_obj);
 
   res.status(err.status);
   res.json({response: err.status, error: err.message});
