@@ -2,7 +2,7 @@ const fs = require('fs');
 
 // Server error log file
 error_log = fs.createWriteStream('./server_error.log', { flags: 'a' });
-info_log = fs.createWriteStream('./server_error.log', { flags: 'a' });
+info_log = fs.createWriteStream('./server_info.log', { flags: 'a' });
 
 module.exports = {
   error: function(err_msg) {
