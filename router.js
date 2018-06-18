@@ -3,7 +3,6 @@ const router = express.Router();
 const maxmind = require('maxmind');
 const csvParser = require('csv-load-sync');
 const db = require('./db.js');
-const server_log = require('./server_log.js');
 
 var country_iso = csvParser('country_iso_prefix.csv');
 
@@ -36,10 +35,10 @@ router.get('/balance/:userId', function(req, res, next){
         }
         next(http_err);
       } else {
-        var obj = {response: 200, balance: rows[0]['account_state']};
+        var response_body = {response: 200, balance: rows[0]['account_state']};
+
         res.status(200);
-        res.json(obj);
-        server_log.info(obj);
+        res.send_json(response_body);
       }
     });
   }
@@ -62,17 +61,15 @@ router.get('/isregistered/:userId', function(req, res, next){
         console.log(http_err.stack);
         console.log("database server error code:" + err.code);
       } else {
+        var response_body;
         if (rows.length == 0) {
-          var obj = {response: 404, result: 1};
-          res.status(404);
-          res.json(obj); // not registered user
-          server_log.info(obj);
+          response_body = {response: 200, result: 1};
         } else {
-          var obj = {response: 200, result: 0};
-          res.status(200);
-          res.json(obj); // registered user
-          server_log.info(obj);
+          response_body = {response: 200, result: 0};
         }
+
+        res.status(200);
+        res.send_json(response_body); // not registered user
       }
     });
   }
@@ -89,10 +86,10 @@ router.get('/ipcountry', async function(req, res, next){
   for (i = 0; i < country_iso.length; i++) {
     if (country_iso[i]['iso'] === iso_code) {
       var phone_code = country_iso[i]['phonecode'];
-      var obj = {response: 200, prefix: phone_code, iso_code: iso_code, name: name};
+      var response_body = {response: 200, prefix: phone_code, iso_code: iso_code, name: name};
+
       res.status(200);
-      res.json(obj);
-      server_log.info(obj);
+      res.send_json(response_body);
     }
   }
 });

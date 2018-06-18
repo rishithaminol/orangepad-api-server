@@ -15,6 +15,32 @@ app.use(function(req, res, next){
   next();
 });
 
+// Add logging mechanism
+// Every function should set response code before send data.
+app.use(function(req, res, next){
+  res.send_json = function(response_body){
+    var log_obj = {
+      ip_addr: req.connection.remoteAddress.split(':').pop(),
+      orig_url: req.originalUrl,
+      req_url: req.url,
+      response_body: response_body,
+      response_headers: res._headers,
+      request_method: req.method,
+      request_headers: req.headers
+    };
+
+    if (res.statusCode == 200) {
+      server_log.info(log_obj);
+    } else {
+      server_log.error(log_obj);
+    }
+
+    res.json(response_body);
+  };
+
+  next();
+});
+
 // app.use(express.static('static')); // Use this for ssl activation
 app.use('/', routes);
 app.disable('etag');
@@ -33,19 +59,9 @@ app.use(function(req, res, next){
   next(err);
 });
 app.use(function (err, req, res, next) {
-  var err_obj = {
-    time: new Date() / 1000,
-    error_type: err.message,
-    ip_addr: req.connection.remoteAddress.split(':').pop(),
-    req_url: req.url,
-    http_method: req.method,
-    http_headers: req.headers
-  };
-  server_log.error(err_obj);
-
   res.status(err.status);
-  res.json({response: err.status, error: err.message});
-})
+  res.send_json({response: err.status, error: err.message});
+});
 
 var server = app.listen(6565, function() {
   console.log('Express server listening on port ' + 6565);
