@@ -29,13 +29,15 @@ app.use(function(req, res, next){
       request_headers: req.headers
     };
 
-    if (res.statusCode == 200) {
+    if (response_body.response == 200) {
       server_log.info(log_obj);
     } else {
       server_log.error(log_obj);
     }
 
+    res.status(response_body.response);
     res.json(response_body);
+    res.end();
   };
 
   next();
@@ -48,22 +50,21 @@ app.disable('etag');
 // determine all undefined calls as errors (catch 404s)
 // every error detection priour to every route should be written here
 app.use(function(req, res, next){
-  var err;
+  var err = {};
   if (!allowed_http_methods.includes(req.method)) {
-    err = new Error("undefined_method");
-    err.status = 405;
+    err.response = 405;
+    err.message = "undefined_method";
   } else {
-    err = new Error("undefined_url");
-    err.status = 404;
+    err.response = 404;
+    err.message = "undefined_url";
   }
   next(err);
 });
-app.use(function (err, req, res, next) {
-  res.status(err.status);
-  res.send_json({response: err.status, error: err.message});
+app.use(function(err, req, res, next){
+  res.send_json({response: err.response, result: 1, error: err.message});
 });
 
-var server = app.listen(6565, function() {
+var server = app.listen(6565, function(){
   console.log('Express server listening on port ' + 6565);
 });
 
