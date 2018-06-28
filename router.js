@@ -213,7 +213,7 @@ router.get('/verify-number', function(req, res, next){
       var sql_ = "SELECT verification_code FROM orangepad_api.sms_verification " +
                  "WHERE sms_receiver_number = '"+ req.query.phone +"';";
       db.query_from_pool(sql_, next, function(rows, fields){
-        if (rows.length > 0 && rows[0]['verification_code'] == req.query.code) {
+        if (rows.length > 0 && rows[rows.length - 1]['verification_code'] == req.query.code) {
           var random_pass = Math.random().toString(36).slice(-11) +
                             Math.random().toString(36).slice(-11);
           var sql_ = "UPDATE voipswitch.clientsshared " +
