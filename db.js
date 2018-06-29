@@ -199,7 +199,6 @@ var register_orangepad_user = function(url_query, next_err_igniter, callback) {
     query_values = query_values.concat("id_client="+ new_id_client);
 
     var query = "INSERT IGNORE INTO orangepad_api.clients SET "+ query_values +";";
-    console.log(query);
     insert_from_pool(query, next_err_igniter, function(result){
       if (!result) {
         callback(-1);

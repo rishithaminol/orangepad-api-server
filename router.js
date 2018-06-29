@@ -11,7 +11,7 @@ const nexmo = new Nexmo({
   apiSecret: "ff90d0bf"
 });
 var nexmo_options = {
-   ttl: 900000,
+   ttl: 60000,
    url: 'www.orangepad.com',
    title: 'Orangepad'
 };
@@ -159,7 +159,7 @@ router.get('/send-verification', function(req, res, next){
 
   db.is_registered_number(req.query.phone, next, function(id_client){
     if (id_client != -1) { // registered user
-      console.log('existing Orangepad user::::::');
+      console.log("existing Orangepad Number!");
 
       var sender_id = 'Orangepad';
       var ver_number = Math.random().toString().slice(-5);
@@ -171,10 +171,23 @@ router.get('/send-verification', function(req, res, next){
           var sql_ = "INSERT INTO orangepad_api.sms_verification SET message_id='"+
                       messages['message-id'] +"', sender_id='"+ sender_id +
                       "', sms_receiver_number='"+ messages['to'] +
-                      "', status_code=0, verification_code="+ ver_number +
-                      ", message_price="+ messages['message-price'] +
+                      "', status_code=0, verification_code='"+ ver_number +
+                      "', message_price="+ messages['message-price'] +
                       ", remaining_balance="+ messages['remaining-balance'] +
-                      ", id_client=" + id_client + ";";
+                      ", id_client=" + id_client + ", expire='no';";
+          setTimeout(function(){ // Expire function
+            var msg_id = messages['message-id'];
+            var expire_sql = "UPDATE orangepad_api.sms_verification " +
+                             "SET expire='yes' " +
+                             "WHERE message_id='"+ msg_id +"';";
+            db.insert_from_pool(expire_sql, next, function(result){
+              if (!result) {
+                console.log("Error recording expiration status message_id = " + msg_id);
+              } else {
+                console.log("message_id: " + msg_id + " expired!");
+              }
+            });
+          }, nexmo_options.ttl);
 
           db.insert_from_pool(sql_, next, function(result){
             if (!result) {
@@ -212,7 +225,7 @@ router.get('/verify-number', function(req, res, next){
   db.is_registered_number(req.query.phone, next, function(id_client){
     if (id_client != -1) { // registered user
       var sql_ = "SELECT verification_code FROM orangepad_api.sms_verification " +
-                 "WHERE sms_receiver_number = '"+ req.query.phone +"';";
+                 "WHERE sms_receiver_number = '"+ req.query.phone +"' && expire = 'no';";
       db.query_from_pool(sql_, next, function(rows, fields){
         if (rows.length > 0 && rows[rows.length - 1]['verification_code'] == req.query.code) {
           var random_pass = pwgen(32);

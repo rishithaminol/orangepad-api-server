@@ -34,8 +34,9 @@ CREATE TABLE `orangepad_api`.`sms_verification` (
   `sms_receiver_number` VARCHAR(20) NULL,
   `status_code` INT UNSIGNED NULL,
   `error_text` VARCHAR(255) NULL,
-  `verification_code` INT(11) UNSIGNED NULL,
+  `verification_code` VARCHAR(20) NULL,
   `message_price` DECIMAL(12,4) NULL,
   `remaining_balance` DECIMAL(12,4) NULL,
   `id_client` INT(11) UNSIGNED NULL,
+  `expire` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`incident_id`));
