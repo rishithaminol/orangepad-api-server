@@ -1,10 +1,12 @@
-var mysql = require('mysql');
+const mysql = require('mysql');
 const fs = require('fs');
 const pwgen = require('./password_gen');
 
-// user id should be validated for sql injections
-var validation_format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-var validation_format_email = /[!#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]+/;
+// user intputs should be validated for sql injections
+var validation_format_email = /^[a-zA-Z0-9_\.@]+$/;
+var validation_format_number = /^\d+$/;
+var validation_format_user = /^[\da-zA-Z_]+$/;
+var validation_format_name = /^[a-zA-Z]+$/;
 
 var dbconf = JSON.parse(fs.readFileSync('./dbconfig.json', 'UTF-8'));
 var conn_pool = mysql.createPool(dbconf);
@@ -15,15 +17,19 @@ conn_pool.on('connection', function(connection) {
 
 // callback format -> function(rows, fields)
 var query_from_pool = function(query, next_err_igniter, callback) {
+  console.log(query);
   conn_pool.query(query, function(err, rows, fields){
     if (err) {
-      if (next_err_igniter == null) {
+      if (next_err_igniter == null) { // For testing purposes
         console.log('error occured:' + err.code);
         return;
       }
 
+      var stack = new Error().stack
       next_err_igniter({response: 500, message: "server_error"});
       console.log("database server error code:" + err.code);
+      console.log("============ stack trace =============");
+      console.log(stack);
       return;
     }
 
@@ -33,14 +39,19 @@ var query_from_pool = function(query, next_err_igniter, callback) {
 
 // callback format -> function(result)
 var insert_from_pool = function(query, next_err_igniter, callback) {
+  console.log(query);
   conn_pool.query(query, function(err, result){
     if (err) {
-      if (next_err_igniter == null) {
+      if (next_err_igniter == null) { // For testing purposes
         console.log('error occured:' + err.code);
         return;
       }
+
+      var stack = new Error().stack
       next_err_igniter({response: 500, message: "server_error"});
       console.log("database server error code:" + err.code);
+      console.log("============ stack trace =============");
+      console.log(stack);
       return;
     }
 
@@ -48,12 +59,13 @@ var insert_from_pool = function(query, next_err_igniter, callback) {
   });
 };
 
+// Evaluate for Orangepad registerd user
 // callback function format -> function(id_user)
 //        returns the user id. -1 if not found
 // express framework 'next' error kickstarter -> next_err_igniter
 // username -> user
 var is_registered = function(user, next_err_igniter, callback) {
-  if (validation_format.test(user)) {
+  if (!validation_format_user.test(user)) {
     next_err_igniter({response: 403, message: "malicious_user_credentials"});
     return; // return from 'is_registered' function
   }
@@ -68,12 +80,12 @@ var is_registered = function(user, next_err_igniter, callback) {
   });
 };
 
-// callback function format -> function(id_user)
+// callback function format -> function(id_client)
 //        returns the user id. -1 if not found
 // express framework 'next' error kickstarter -> next_err_igniter
 // username -> user
 var is_registered_number = function(phone, next_err_igniter, callback) {
-  if (validation_format.test(phone)) {
+  if (!validation_format_number.test(phone)) {
     next_err_igniter({response: 403, message: "malicious_user_credentials"});
     return; // return from 'is_registered' function
   }
@@ -91,7 +103,7 @@ var is_registered_number = function(phone, next_err_igniter, callback) {
 // check whether the given user is a retail user and return the id number
 // if found.
 var is_retail_user = function(user, next_err_igniter, callback) {
-  if (validation_format.test(user)) {
+  if (!validation_format_user.test(user)) {
     next_err_igniter({response: 403, message: "malicious_user_credentials"});
     return; // return from 'is_retail_user' function
   }
@@ -109,7 +121,7 @@ var is_retail_user = function(user, next_err_igniter, callback) {
 // Create new retail user and return qunique Id of created user
 // callback -> callback(new_id_client)
 var add_new_retail_user = function(user, next_err_igniter, callback) {
-  if (validation_format.test(user)) {
+  if (!validation_format_user.test(user)) {
     next_err_igniter({response: 403, message: "malicious_user_credentials"});
     return; // return from 'add_new_retail_user' function
   }
@@ -135,54 +147,50 @@ var add_new_retail_user = function(user, next_err_igniter, callback) {
 //var register_orangepad_user = function(retail_id, user, passwd, fname, lname, email, os, next_err_igniter, callback) {
 var register_orangepad_user = function(url_query, next_err_igniter, callback) {
   var query_values = "";
-  var validated = false; // If validation format fails all goes down.
+  var validation = true; // If validation format fails all goes down.
+
   for (var key in url_query) {
     switch (key) {
-      case 'password':
-            break;
-
-      case 'email':
-            validated = validation_format_email.test(url_query[key]);
-            break;
-
-      default:
-            validated = validation_format.test(url_query[key]);
-    }
-
-    if (validated) { // if not validated
-      next_err_igniter({response: 403, message: "malicious_user_credentials"});
-      console.log('Orangepad registration malfunction');
-      return; // return from 'register_orangepad_user' function
-    }
-
-    switch (key) {
       case 'login':
+            validation = validation_format_user.test(url_query[key]);
             query_values = query_values.concat("login='"+ url_query[key] +"',");
             break;
 
       case 'phone':
+            validation = validation_format_number.test(url_query[key]);
             query_values = query_values.concat("phone='"+ url_query[key] +"',");
             break;
 
       case 'email':
+            validation = validation_format_email.test(url_query[key]);
             query_values = query_values.concat("email='"+ url_query[key] +"', ");
             break;
 
       case 'fname':
+            validation = validation_format_name.test(url_query[key]);
             query_values = query_values.concat("first_name='"+ url_query[key] +"', ");
             break;
 
       case 'lname':
+            validation = validation_format_name.test(url_query[key]);
             query_values = query_values.concat("last_name='"+ url_query[key] +"', ");
             break;
 
       case 'password':
+            validation = true;
             query_values = query_values.concat("user_pass=SHA1('"+ url_query[key] +"'), ");
             break;
 
       case 'country_code':
+            validation = validation_format_number.test(url_query[key]);
             query_values = query_values.concat("cc='"+ url_query[key] +"', ");
             break;
+    }
+
+    if (!validation) { // If validation false
+      next_err_igniter({response: 403, message: "malicious_user_credentials"});
+      console.log('Orangepad registration malfunction');
+      return; // return from 'register_orangepad_user' function
     }
   }
 
@@ -205,7 +213,7 @@ var register_orangepad_user = function(url_query, next_err_igniter, callback) {
 
 // check whether the given email registered with Orangepad system
 var is_registered_email = function(email, next_err_igniter, callback) {
-  if (validation_format_email.test(email)) {
+  if (!validation_format_email.test(email)) {
     next_err_igniter({response: 403, message: "malicious_user_credentials"});
     return; // return from 'is_registered_email' function
   }
