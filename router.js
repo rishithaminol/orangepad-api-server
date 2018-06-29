@@ -24,16 +24,12 @@ var CountryLookup = maxmind.openSync('./GeoLite2-Country.mmdb', {
   watchForUpdatesHook: () => {console.log('GeoipLocation database Updated!');}
 });
 
-// user id should be validated for sql injections
-var validation_format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
-var validation_format_email = /[!#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]+/;
-
 // Suppress favicon.ico
 router.get('/favicon.ico', (req, res) => res.sendStatus(204));
 
 // Get balance
 router.get('/balance/:userId', function(req, res, next){
-  if (validation_format.test(req.params.userId)) { // Untrusted username
+  if (!db.validation_format_user.test(req.params.userId)) { // Untrusted username
     next({response: 403, message: "malicious_username"});
     return;
   }
@@ -152,7 +148,7 @@ router.get('/send-verification', function(req, res, next){
     return;
   }
 
-  if (validation_format.test(req.query.phone)) { // Untrusted username
+  if (db.validation_format_number.test(req.query.phone)) { // Untrusted username
     next({response: 403, message: "malicious_user_credentials"});
     return;
   }
@@ -217,7 +213,8 @@ router.get('/verify-number', function(req, res, next){
     return;
   }
 
-  if (validation_format.test(req.query.phone) || validation_format.test(req.query.code)) { // Untrusted username
+  if (db.validation_format_number.test(req.query.phone) ||
+      db.validation_format_number.test(req.query.code)) { // Untrusted username
     next({response: 403, message: "malicious_user_credentials"});
     return;
   }

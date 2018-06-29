@@ -228,6 +228,13 @@ var is_registered_email = function(email, next_err_igniter, callback) {
 };
 
 module.exports = {
+  // validation format check constants
+  validation_format_email: validation_format_email,
+  validation_format_number: validation_format_number,
+  validation_format_user: validation_format_user,
+  validation_format_name: validation_format_name,
+
+  // Functions
   query_from_pool: query_from_pool,
   insert_from_pool: insert_from_pool,
   is_registered: is_registered, // validates a Orangepad registered client
