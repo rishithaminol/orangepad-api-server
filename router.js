@@ -4,6 +4,7 @@ const maxmind = require('maxmind');
 const csvParser = require('csv-load-sync');
 const db = require('./db.js');
 const Nexmo = require('nexmo');
+const pwgen = require('./password_gen')
 
 const nexmo = new Nexmo({
   apiKey: "fb7f7501",
@@ -214,12 +215,12 @@ router.get('/verify-number', function(req, res, next){
                  "WHERE sms_receiver_number = '"+ req.query.phone +"';";
       db.query_from_pool(sql_, next, function(rows, fields){
         if (rows.length > 0 && rows[rows.length - 1]['verification_code'] == req.query.code) {
-          var random_pass = Math.random().toString(36).slice(-11) +
-                            Math.random().toString(36).slice(-11);
+          var random_pass = pwgen(32);
           var sql_ = "UPDATE voipswitch.clientsshared " +
                      "SET password = '"+ random_pass +"', " +
                      "    web_password = SHA1('"+ random_pass +"') " +
                      "WHERE id_client = '"+ id_client +"';";
+
           db.insert_from_pool(sql_, next, function(result){
             res.send_json({response: 200, result: 0, key: random_pass, message: "user_verified"});
           });

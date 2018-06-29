@@ -1,5 +1,6 @@
 var mysql = require('mysql');
 const fs = require('fs');
+const pwgen = require('./password_gen');
 
 // user id should be validated for sql injections
 var validation_format = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
@@ -113,8 +114,7 @@ var add_new_retail_user = function(user, next_err_igniter, callback) {
     return; // return from 'add_new_retail_user' function
   }
 
-  var random_pass = Math.random().toString(36).slice(-11) +
-                    Math.random().toString(36).slice(-11);
+  var random_pass = pwgen(32);
   var query = "INSERT INTO voipswitch.clientsshared " +
           "(login, password, web_password, type, id_tariff," +
           "account_state, tech_prefix, codecs, primary_codec) " +
