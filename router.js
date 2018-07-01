@@ -148,7 +148,7 @@ router.get('/send-verification', function(req, res, next){
     return;
   }
 
-  if (db.validation_format_number.test(req.query.phone)) { // Untrusted username
+  if (!db.validation_format_number.test(req.query.phone)) { // Untrusted username
     next({response: 403, message: "malicious_user_credentials"});
     return;
   }
@@ -213,8 +213,8 @@ router.get('/verify-number', function(req, res, next){
     return;
   }
 
-  if (db.validation_format_number.test(req.query.phone) ||
-      db.validation_format_number.test(req.query.code)) { // Untrusted username
+  if (!db.validation_format_number.test(req.query.phone) ||
+      !db.validation_format_number.test(req.query.code)) { // Untrusted username
     next({response: 403, message: "malicious_user_credentials"});
     return;
   }
