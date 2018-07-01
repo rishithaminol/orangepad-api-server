@@ -43,7 +43,7 @@ app.use(function(req, res, next){
   next();
 });
 
-// app.use(express.static('static')); // Use this for ssl activation
+app.use(express.static('html')); // Use this for ssl activation
 app.use('/', routes);
 app.disable('etag');
 
@@ -74,4 +74,3 @@ https.createServer({
 }, app).listen(6566, function() {
   console.log('Https server listening ' + 6566);
 });
-
