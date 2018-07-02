@@ -8,7 +8,6 @@ const fs = require('fs');
 var allowed_http_methods = ['GET'];
 
 app.use(express.static('html')); // Use this for ssl activation
-app.use('/', routes);
 app.disable('etag');
 
 app.use(function(req, res, next){
@@ -55,6 +54,8 @@ app.use(function(req, res, next){
 
   next();
 });
+
+app.use('/', routes); // Routes should see midlware
 
 // determine all undefined calls as errors (catch 404s)
 // every error detection priour to every route should be written here
