@@ -6,12 +6,13 @@ const server_log = require('./server_log.js');
 const fs = require('fs');
 
 var allowed_http_methods = ['GET'];
+var server_conf = JSON.parse(fs.readFileSync('./server_config.json', 'UTF-8'));
 
 app.use(express.static('html')); // Use this for ssl activation
 app.disable('etag');
 
 app.use(function(req, res, next){
-  if (req.headers['host'] != 'rest.shatalk.com') {
+  if (req.headers['host'] != server_conf.http_host) {
     console.log('unwanted request caught');
     return;
   }
