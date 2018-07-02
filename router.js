@@ -106,7 +106,7 @@ router.get('/registernew', function(req, res, next){
           var query = "DELETE FROM voipswitch.clientsshared WHERE id_client = " +
                       id_client;
 
-          insert_from_pool(query, next, function(result){
+          db.insert_from_pool(query, next, function(result){
             if (!result) {
               // May be server side error
               console.log("Error deleting retail user! id_client = " + id_client);
