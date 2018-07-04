@@ -3,4 +3,5 @@
   "user": "username",
   "password": "password",
   "connectionLimit": 50
+  "port": 3306,
 }
