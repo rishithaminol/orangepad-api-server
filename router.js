@@ -97,45 +97,51 @@ router.get('/registernew', function(req, res, next){
     return;
   }
 
-  db.is_registered_email(req.query.email, next, function(id_client){
-    if (id_client != -1) { // email exists
-      res.send_json({response: 200, result: 1, message: "email_exists"});
-    } else { // email does not exist (-1)
-      db.is_retail_user(req.query.login, next, function(id_client){
-        if (id_client != -1) { // existing retail user. Delete it
-          var query = "DELETE FROM voipswitch.clientsshared WHERE id_client = " +
-                      id_client;
+  db.is_registered_number(req.query.phone, next, function(id_client){
+    if (id_client != -1) {// mobile number exists
+      res.send_json({response: 200, result: 1, message: "mobile_number_exists"});
+    } else {
+      db.is_registered_email(req.query.email, next, function(id_client){
+        if (id_client != -1) { // email exists
+          res.send_json({response: 200, result: 1, message: "email_exists"});
+        } else { // email does not exist (-1)
+          db.is_retail_user(req.query.login, next, function(id_client){
+            if (id_client != -1) { // existing retail user. Delete it
+              var query = "DELETE FROM voipswitch.clientsshared WHERE id_client = " +
+              id_client;
 
-          db.insert_from_pool(query, next, function(result){
-            if (!result) {
-              // May be server side error
-              console.log("Error deleting retail user! id_client = " + id_client);
-            } else {
-              console.log("Deleted existing retail user id_client = " + id_client);
-              db.register_orangepad_user(req.query, next, function(reuslt){
-                res.send_json({response: 200, result: 0, message: "new_user_created"});
+              db.insert_from_pool(query, next, function(result){
+                if (!result) {
+                  // May be server side error
+                  console.log("Error deleting retail user! id_client = " + id_client);
+                } else {
+                  console.log("Deleted existing retail user id_client = " + id_client);
+                  db.register_orangepad_user(req.query, next, function(reuslt){
+                    res.send_json({response: 200, result: 0, message: "new_user_created"});
+                  });
+                }
               });
+
+              return;
             }
-          });
 
-          return;
+            //// is not an existing retail user -> create new one
+            // req.query = {
+            //   login: "94710600085",
+            //   phone: "94710600085",
+            //   email: "rishithaminol@gmail.com",
+            //   fname: "Rishitha",
+            //   lname: "Minol",
+            //   password: "aklsfioe",
+            // };
+            db.register_orangepad_user(req.query, next, function(reuslt){
+              res.send_json({response: 200, result: 0, message: "new_user_created"});
+            });
+          }); // END - is_retail_user
         }
-
-        //// is not an existing retail user -> create new one
-        // req.query = {
-        //   login: "94710600085",
-        //   phone: "94710600085",
-        //   email: "rishithaminol@gmail.com",
-        //   fname: "Rishitha",
-        //   lname: "Minol",
-        //   password: "aklsfioe",
-        // };
-        db.register_orangepad_user(req.query, next, function(reuslt){
-          res.send_json({response: 200, result: 0, message: "new_user_created"});
-        });
-      }); // END - is_retail_user
+      }); // db call
     }
-  }); // db call
+  });
 });
 
 // TODO: 'phone' should be numeric
