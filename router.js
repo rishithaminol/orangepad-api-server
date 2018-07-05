@@ -252,4 +252,30 @@ router.get('/verify-number', function(req, res, next){
   });
 });
 
+// Check retail login credentials for Orangepad registered user
+// /check-login/?user=94710600085&key=<retail key>
+router.get('/check-login', function(req, res, next){
+  // compulsary fields
+  if (req.query.user == undefined || req.query.key == undefined) { // check required fields
+    next({response: 403, message: "wrong_parameters"});
+    return;
+  }
+
+  if (!db.validation_format_user.test(req.query.user)) { // Untrusted username
+    next({response: 403, message: "malicious_user_credentials"});
+    return;
+  }
+
+  var sql_ = "SELECT login, password FROM voipswitch.clientsshared " +
+             "WHERE login = '"+ req.query.user +"' && password = '"+ req.query.key +"';"
+
+  db.query_from_pool(sql_, next, function(rows, fields){
+    if (rows.length > 0) { // User login is valid
+      res.send_json({response: 200, result: 0});
+    } else {
+      res.send_json({response: 200, result: 1});
+    }
+  });
+});
+
 module.exports = router;
