@@ -4,7 +4,7 @@ const maxmind = require('maxmind');
 const csvParser = require('csv-load-sync');
 const db = require('./db.js');
 const Nexmo = require('nexmo');
-const pwgen = require('./password_gen')
+const pwgen = require('./password_gen');
 
 const nexmo = new Nexmo({
   apiKey: "fb7f7501",
@@ -30,7 +30,7 @@ router.get('/favicon.ico', (req, res) => res.sendStatus(204));
 // Get balance
 router.get('/balance/:userId', function(req, res, next){
   if (!db.validation_format_user.test(req.params.userId)) { // Untrusted username
-    next({response: 403, message: "malicious_username"});
+    next({response: 403, result: 1, message: "malicious_username"});
     return;
   }
 
@@ -38,7 +38,7 @@ router.get('/balance/:userId', function(req, res, next){
                      "WHERE login = '" + req.params.userId + "';",
                      next, function (rows, fields) {
     if (rows.length == 0) {
-      next({response: 403, message: "unknown_user"});
+      next({response: 403, result: 1, message: "unknown_user"});
       return;
     }
 
@@ -68,6 +68,42 @@ router.get('/is_registered_number/:mobile_number', function(req, res, next){
   });
 });
 
+// Check for registerd Orangepad mobile number with mobile phone
+// /is_registered_mobile/?phone=94710600085&imei=21874893724
+router.get('/is_registered_mobile', function(req, res, next){
+  // check for compulsary fields
+  if (req.query.phone == undefined || req.query.imei == undefined) {
+    next({response: 403, result: 1, message: "wrong_parameters"});
+    return;
+  }
+
+  if (!db.validation_format_number.test(req.query.phone) ||
+      !db.validation_format_number.test(req.query.imei)) {
+    next({response: 403, result: 1, message: "malicious_inputs"});
+    return; // return from 'is_registered' function
+  }
+
+  var query = "SELECT id_client FROM orangepad_api.clients "+
+              "WHERE phone = '" + req.query.phone +"' && imei = '"+ req.query.imei +"';";
+
+  db.query_from_pool(query, next, function(rows, fields){
+    if (rows.length > 0) { // user already assigned with the mobile device
+      db.retail_password(rows[0]['id_client'], next, function(password){
+        res.send_json({response: 200, result: 2, key: password,
+                       message:"Already registered number & imei number (ok no problem)"});
+      });
+    } else {
+      db.is_registered_number(req.query.phone, next, function(id_client){
+        if (id_client != -1) { // User registerd if clients unique id returns
+          res.send_json({response: 200, result: 0, message: "Mobile number already registered but different imei number"});
+        } else {
+          res.send_json({response: 200, result: 1, message: "Invalid user (No orangepad user)"});
+        }
+      });
+    }
+  });
+});
+
 // Get geolocation information
 router.get('/ipcountry', async function(req, res, next){
   var client_ip_addr = req.connection.remoteAddress.split(':').pop();
@@ -92,8 +128,9 @@ router.get('/ipcountry', async function(req, res, next){
 router.get('/registernew', function(req, res, next){
   // check for compulsary fields
   if (req.query.login == undefined || req.query.email == undefined ||
-      req.query.password == undefined || req.query.phone == undefined) {
-    next({response: 403, message: "wrong_parameters"});
+      req.query.password == undefined || req.query.phone == undefined ||
+      req.query.imei == undefined) {
+    next({response: 403, result: 1, message: "missing_parameters"});
     return;
   }
 
@@ -108,7 +145,7 @@ router.get('/registernew', function(req, res, next){
           db.is_retail_user(req.query.login, next, function(id_client){
             if (id_client != -1) { // existing retail user. Delete it
               var query = "DELETE FROM voipswitch.clientsshared WHERE id_client = " +
-              id_client;
+                           id_client;
 
               db.insert_from_pool(query, next, function(result){
                 if (!result) {
@@ -133,6 +170,7 @@ router.get('/registernew', function(req, res, next){
             //   fname: "Rishitha",
             //   lname: "Minol",
             //   password: "aklsfioe",
+            //   imei: 19823749817329
             // };
             db.register_orangepad_user(req.query, next, function(reuslt){
               res.send_json({response: 200, result: 0, message: "new_user_created"});
@@ -150,12 +188,12 @@ router.get('/registernew', function(req, res, next){
 router.get('/send-verification', function(req, res, next){
   // compulsary fields
   if (req.query.phone == undefined) { // check required fields
-    next({response: 403, message: "wrong_parameters"});
+    next({response: 403, result: 1, message: "wrong_parameters"});
     return;
   }
 
   if (!db.validation_format_number.test(req.query.phone)) { // Untrusted username
-    next({response: 403, message: "malicious_user_credentials"});
+    next({response: 403, result: 1, message: "malicious_user_credentials"});
     return;
   }
 
@@ -177,6 +215,7 @@ router.get('/send-verification', function(req, res, next){
                       "', message_price="+ messages['message-price'] +
                       ", remaining_balance="+ messages['remaining-balance'] +
                       ", id_client=" + id_client + ", expire='no';";
+
           setTimeout(function(){ // Expire function
             var msg_id = messages['message-id'];
             var expire_sql = "UPDATE orangepad_api.sms_verification " +
@@ -205,26 +244,29 @@ router.get('/send-verification', function(req, res, next){
         }
       });
     } else { // is not an existing Orangepad user
-      res.send_json({response: 403, result: 1, message: "wrong_mobile_number"});
+      res.send_json({response: 403, result: 1, message: "not_existing_mobile_number"});
     }
   }); // END - is_retail_user
 });
 
 // TODO: 'phone' should be numeric
-// /verify-number/?phone=94710600085&code=27060
+// /verify-number/?phone=94710600085&code=27060&imei=38947189172
 router.get('/verify-number', function(req, res, next){
   // compulsary fields
-  if (req.query.phone == undefined || req.query.code == undefined) { // check required fields
-    next({response: 403, message: "wrong_parameters"});
+  if (req.query.phone == undefined || req.query.code == undefined ||
+      req.query.imei == undefined) { // check required fields
+    next({response: 403, result: 1, message: "missing_parameters"});
     return;
   }
 
   if (!db.validation_format_number.test(req.query.phone) ||
-      !db.validation_format_number.test(req.query.code)) { // Untrusted username
-    next({response: 403, message: "malicious_user_credentials"});
+      !db.validation_format_number.test(req.query.code) ||
+      !db.validation_format_number.test(req.query.imei)) { // Untrusted username
+    next({response: 403, result: 1, message: "malicious_user_credentials"});
     return;
   }
 
+  // Check for already registered orangepad number
   db.is_registered_number(req.query.phone, next, function(id_client){
     if (id_client != -1) { // registered user
       var sql_ = "SELECT verification_code FROM orangepad_api.sms_verification " +
@@ -235,15 +277,20 @@ router.get('/verify-number', function(req, res, next){
           var sql_ = "UPDATE voipswitch.clientsshared " +
                      "SET password = '"+ random_pass +"', " +
                      "    web_password = SHA1('"+ random_pass +"') " +
-                     "WHERE id_client = '"+ id_client +"';";
+                     "WHERE id_client = "+ id_client +";";
+          var sql_2 = "UPDATE orangepad_api.clients " +
+                      "SET imei = '"+ req.query.imei +"' " +
+                      "WHERE id_client = " + id_client + ";";
 
-          db.insert_from_pool(sql_, next, function(result){
-            res.send_json({response: 200, result: 0, key: random_pass, message: "user_verified"});
+          db.insert_from_pool(sql_, next, function(result){ // set new retail password
+            db.insert_from_pool(sql_2, next, function(result){ // set IMEI
+              res.send_json({response: 200, result: 0, key: random_pass,
+                             message: "user_verified"});
+            });
           });
           return;
         }
 
-        // hacker distraction for bruit forcing
         next({response: 403, result: 1, message: "wrong_mobile_number"});
       });
     } else {
@@ -257,12 +304,13 @@ router.get('/verify-number', function(req, res, next){
 router.get('/check-login', function(req, res, next){
   // compulsary fields
   if (req.query.user == undefined || req.query.key == undefined) { // check required fields
-    next({response: 403, message: "wrong_parameters"});
+    next({response: 403, result: 1, message: "wrong_parameters"});
     return;
   }
 
+  // TODO: 'Key' should be validated
   if (!db.validation_format_user.test(req.query.user)) { // Untrusted username
-    next({response: 403, message: "malicious_user_credentials"});
+    next({response: 403, result: 1, message: "malicious_user_credentials"});
     return;
   }
 

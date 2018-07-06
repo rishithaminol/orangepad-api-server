@@ -161,6 +161,11 @@ var register_orangepad_user = function(url_query, next_err_igniter, callback) {
             query_values = query_values.concat("phone='"+ url_query[key] +"',");
             break;
 
+      case 'imei':
+            validation = validation_format_number.test(url_query[key]);
+            query_values = query_values.concat("imei='"+ url_query[key] +"',");
+            break;
+
       case 'email':
             validation = validation_format_email.test(url_query[key]);
             query_values = query_values.concat("email='"+ url_query[key] +"', ");
@@ -227,6 +232,20 @@ var is_registered_email = function(email, next_err_igniter, callback) {
   });
 };
 
+// fetch the retail password for the given id_client
+// return -1 for callback if error ocures
+var retail_password = function(id_client, next_err_igniter, callback) {
+  var sql_ = "SELECT password FROM voipswitch.clientsshared " +
+           "WHERE id_client = " + id_client + ";";
+  query_from_pool(sql_, next_err_igniter, function(rows, fields){
+    if (rows.length == 0) {
+      callback(-1);
+    } else {
+      callback(rows[0]['password']);
+    }
+  });
+};
+
 module.exports = {
   // validation format check constants
   validation_format_email: validation_format_email,
@@ -241,5 +260,6 @@ module.exports = {
   is_registered_number: is_registered_number, // Check whether the given mobile number is in the database
   is_retail_user: is_retail_user,
   is_registered_email: is_registered_email,
-  register_orangepad_user: register_orangepad_user
+  register_orangepad_user: register_orangepad_user,
+  retail_password: retail_password
 };

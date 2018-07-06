@@ -22,6 +22,8 @@ CREATE TABLE `orangepad_api`.`clients` (
   `first_name` VARCHAR(100) NULL,
   `last_name` VARCHAR(100) NULL,
   `email` VARCHAR(200) NOT NULL,
+  `imei` VARCHAR(20) NULL,
+  UNIQUE INDEX `imei_UNIQUE` (`imei` ASC),
   UNIQUE INDEX `id_client_UNIQUE` (`id_client` ASC),
   UNIQUE INDEX `login_UNIQUE` (`login` ASC),
   UNIQUE INDEX `phone_UNIQUE` (`phone` ASC),
