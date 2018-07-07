@@ -11,7 +11,7 @@ const nexmo = new Nexmo({
   apiSecret: "ff90d0bf"
 });
 var nexmo_options = {
-   ttl: 60000,
+   ttl: 300000,
    url: 'www.orangepad.com',
    title: 'Orangepad'
 };
@@ -294,9 +294,9 @@ router.get('/verify-number', function(req, res, next){
           return;
         }
 
-        next({response: 403, result: 1, message: "wrong_mobile_number"});
+        next({response: 403, result: 1, message: "error_verifying_code"});
       });
-    } else {
+    } else { // not registered number
       next({response: 403, result: 1, message: "wrong_mobile_number"});
     }
   });
