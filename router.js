@@ -42,7 +42,7 @@ router.get('/balance/:userId', function(req, res, next){
       return;
     }
 
-    res.send_json({response: 200, result: 0, balance: rows[0]['account_state']});
+    res.send_json({response: 200, result: 0, balance: rows[0]['account_state'], app_version: 3320});
   });
 });
 
@@ -327,11 +327,6 @@ router.get('/check-login', function(req, res, next){
       res.send_json({response: 200, result: 1});
     }
   });
-});
-
-// Get app version
-router.get('/app-version', function(req, res, next){
-  res.send_json({response:200, version: 3320});
 });
 
 module.exports = router;
