@@ -251,7 +251,6 @@ router.get('/send-verification', function(req, res, next){
   }); // END - is_retail_user
 });
 
-// TODO: 'phone' should be numeric
 // /verify-number/?phone=94710600085&code=27060&imei=38947189172
 router.get('/verify-number', function(req, res, next){
   // compulsary fields

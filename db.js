@@ -163,6 +163,7 @@ var register_orangepad_user = function(url_query, next_err_igniter, callback) {
 
       case 'imei':
             //validation = validation_format_user.test(url_query[key]);
+            validation = true;
             query_values = query_values.concat("imei='"+ url_query[key] +"',");
             break;
 
@@ -203,7 +204,7 @@ var register_orangepad_user = function(url_query, next_err_igniter, callback) {
     console.log("New retail user created with id_client = " + new_id_client);
     query_values = query_values.concat("id_client="+ new_id_client);
 
-    var query = "INSERT IGNORE INTO orangepad_api.clients SET "+ query_values +";";
+    var query = "INSERT INTO orangepad_api.clients SET "+ query_values +";";
     insert_from_pool(query, next_err_igniter, function(result){
       if (!result) {
         callback(-1);
