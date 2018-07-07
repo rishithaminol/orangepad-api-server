@@ -77,8 +77,10 @@ router.get('/is_registered_mobile', function(req, res, next){
     return;
   }
 
-  if (!db.validation_format_number.test(req.query.phone) ||
-      !db.validation_format_number.test(req.query.imei)) {
+  if (!db.validation_format_number.test(req.query.phone)
+  // ||
+  //     !db.validation_format_user.test(req.query.imei)
+    ) {
     next({response: 403, result: 1, message: "malicious_inputs"});
     return; // return from 'is_registered' function
   }
@@ -260,8 +262,10 @@ router.get('/verify-number', function(req, res, next){
   }
 
   if (!db.validation_format_number.test(req.query.phone) ||
-      !db.validation_format_number.test(req.query.code) ||
-      !db.validation_format_number.test(req.query.imei)) { // Untrusted username
+      !db.validation_format_number.test(req.query.code)
+      //  ||
+      // !db.validation_format_user.test(req.query.imei)
+    ) { // Untrusted username
     next({response: 403, result: 1, message: "malicious_user_credentials"});
     return;
   }

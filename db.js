@@ -162,7 +162,7 @@ var register_orangepad_user = function(url_query, next_err_igniter, callback) {
             break;
 
       case 'imei':
-            validation = validation_format_number.test(url_query[key]);
+            //validation = validation_format_user.test(url_query[key]);
             query_values = query_values.concat("imei='"+ url_query[key] +"',");
             break;
 
