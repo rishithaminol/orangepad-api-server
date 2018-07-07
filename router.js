@@ -330,4 +330,9 @@ router.get('/check-login', function(req, res, next){
   });
 });
 
+// Get app version
+router.get('/app-version', function(req, res, next){
+  res.send_json({response:200, version: 3320});
+});
+
 module.exports = router;
